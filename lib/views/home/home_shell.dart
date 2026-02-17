@@ -66,17 +66,17 @@ class _HomeShellState extends State<HomeShell> {
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.fitness_center_outlined),
-            selectedIcon: Icon(Icons.fitness_center),
+            selectedIcon: Icon(Icons.fitness_center,color: Color.fromARGB(255, 0, 94, 245),),
             label: 'Programmes',
           ),
           NavigationDestination(
             icon: Icon(Icons.play_circle_outline),
-            selectedIcon: Icon(Icons.play_circle),
+            selectedIcon: Icon(Icons.play_circle,color: Color.fromARGB(255, 0, 94, 245),),
             label: 'Séances',
           ),
           NavigationDestination(
             icon: Icon(Icons.monitor_weight_outlined),
-            selectedIcon: Icon(Icons.monitor_weight),
+            selectedIcon: Icon(Icons.monitor_weight,color: Color.fromARGB(255, 0, 94, 245),),
             label: 'Poids & perf',
           ),
         ],
