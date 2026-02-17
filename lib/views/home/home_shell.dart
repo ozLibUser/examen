@@ -1,3 +1,4 @@
+// home_shell.dart - Navigation principale
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -37,7 +38,16 @@ class _HomeShellState extends State<HomeShell> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Journal sportif'),
+        title: const Text(
+          'Journal sportif',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1E293B),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
         actions: [
           IconButton(
             onPressed: auth.signOut,
@@ -49,11 +59,10 @@ class _HomeShellState extends State<HomeShell> {
       body: _pages[_index],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (value) {
-          setState(() {
-            _index = value;
-          });
-        },
+        onDestinationSelected: (value) => setState(() => _index = value),
+        backgroundColor: Colors.white,
+        indicatorColor: const Color(0xFF1E293B),
+        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.fitness_center_outlined),
@@ -75,4 +84,3 @@ class _HomeShellState extends State<HomeShell> {
     );
   }
 }
-

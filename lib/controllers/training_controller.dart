@@ -147,6 +147,7 @@ class TrainingController extends ChangeNotifier {
     }
   }
 
+  @override
   void dispose() {
     _cancelSubscriptions();
   }

@@ -1,3 +1,4 @@
+// stats_screen.dart - Écran des statistiques
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -22,46 +23,30 @@ class _StatsScreenState extends State<StatsScreen> {
     super.dispose();
   }
 
-  // -----------------------
-  // UI HELPERS
-  // -----------------------
-
-  void _showSnackbar(
-    BuildContext context,
-    String message, {
-    bool isError = false,
-  }) {
+  void _showSnackbar(BuildContext context, String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
+        backgroundColor: isError ? const Color(0xFFDC2626) : const Color(0xFF059669),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: isError
-            ? Theme.of(context).colorScheme.error
-            : Theme.of(context).colorScheme.primaryContainer,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        margin: const EdgeInsets.all(16),
       ),
     );
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/'
-        '${date.month.toString().padLeft(2, '0')} '
-        '${date.hour.toString().padLeft(2, '0')}:'
-        '${date.minute.toString().padLeft(2, '0')}';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')} '
+        '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
-
-  // -----------------------
-  // ACTIONS
-  // -----------------------
 
   Future<void> _addEntry(BuildContext context) async {
     final controller = context.read<TrainingController>();
-
     final weightText = _weightController.text.replaceAll(',', '.');
     final weight = double.tryParse(weightText.trim());
 
     if (weight == null || weight <= 0) {
-      _showSnackbar(context, 'Veuillez entrer un poids valide',
-          isError: true);
+      _showSnackbar(context, 'Veuillez entrer un poids valide', isError: true);
       return;
     }
 
@@ -88,10 +73,7 @@ class _StatsScreenState extends State<StatsScreen> {
     }
   }
 
-  Future<void> _deleteEntry(
-    BuildContext context,
-    String id,
-  ) async {
+  Future<void> _deleteEntry(BuildContext context, String id) async {
     final controller = context.read<TrainingController>();
     final ok = await controller.deletePerformance(id);
 
@@ -104,35 +86,33 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  // -----------------------
-  // BUILD
-  // -----------------------
-
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<TrainingController>();
     final performances = controller.performances;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       body: CustomScrollView(
         slivers: [
           if (controller.error != null)
             SliverToBoxAdapter(
-              child: Material(
-                color: Theme.of(context).colorScheme.errorContainer,
-                child: ListTile(
-                  title: Text(
-                    controller.error!,
-                    style: TextStyle(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onErrorContainer,
+              child: Container(
+                color: const Color(0xFFFEE2E2),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        controller.error!,
+                        style: const TextStyle(color: Color(0xFFB91C1C)),
+                      ),
                     ),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: controller.clearError,
-                  ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Color(0xFFB91C1C)),
+                      onPressed: controller.clearError,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -143,22 +123,37 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
           ),
           if (performances.isEmpty)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'Aucune mesure enregistrée pour le moment.',
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverToBoxAdapter(
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'Aucune mesure enregistrée',
+                      style: TextStyle(color: Color(0xFF64748B)),
+                    ),
+                  ),
                 ),
               ),
             )
           else
             SliverPadding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList.separated(
                 itemCount: performances.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(height: 8),
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (context, index) {
                   final entry = performances[index];
                   return _buildEntryCard(context, entry);
@@ -174,77 +169,156 @@ class _StatsScreenState extends State<StatsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Suivi du poids / performances',
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.bold),
+        const Text(
+          'Suivi du poids',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1E293B),
+          ),
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: TextField(
-                controller: _weightController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(
-                        decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Poids (kg)',
-                  border: OutlineInputBorder(),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: _weightController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Poids (kg)',
+                        labelStyle: const TextStyle(color: Color(0xFF64748B)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFF1E293B), width: 2),
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 3,
+                    child: TextField(
+                      controller: _noteController,
+                      decoration: InputDecoration(
+                        labelText: 'Note / performance',
+                        labelStyle: const TextStyle(color: Color(0xFF64748B)),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFF1E293B), width: 2),
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF8FAFC),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _addEntry(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1E293B),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text('Ajouter la mesure'),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 3,
-              child: TextField(
-                controller: _noteController,
-                decoration: const InputDecoration(
-                  labelText: 'Note / perf du jour',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            FilledButton(
-              onPressed: () => _addEntry(context),
-              child: const Text('Ajouter'),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 24),
-        Text(
+        const Text(
           'Historique',
-          style: Theme.of(context)
-              .textTheme
-              .titleMedium
-              ?.copyWith(fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1E293B),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildEntryCard(
-    BuildContext context,
-    PerformanceEntry entry,
-  ) {
-    return Card(
+  Widget _buildEntryCard(BuildContext context, PerformanceEntry entry) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: ListTile(
-        leading: const Icon(Icons.monitor_weight),
+        contentPadding: const EdgeInsets.all(12),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(Icons.monitor_weight, color: Color(0xFF1E293B)),
+        ),
         title: Text(
           '${entry.weightKg.toStringAsFixed(1)} kg',
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1E293B),
+          ),
         ),
-        subtitle: Text(
-          '${_formatDate(entry.date)}'
-          '${entry.note.isNotEmpty ? '\n${entry.note}' : ''}',
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            '${_formatDate(entry.date)}${entry.note.isNotEmpty ? '\n${entry.note}' : ''}',
+            style: const TextStyle(color: Color(0xFF64748B)),
+          ),
         ),
         trailing: IconButton(
-          icon: const Icon(Icons.delete_outline),
-          onPressed: () =>
-              _deleteEntry(context, entry.id),
+          icon: const Icon(Icons.delete_outline, color: Color(0xFFDC2626)),
+          onPressed: () => _deleteEntry(context, entry.id),
         ),
       ),
     );
