@@ -7,5 +7,5 @@
 class AuthConfig {
   /// Client ID OAuth 2.0 pour les applications Web.
   /// Obligatoire pour Google Sign-In sur le Web.
-  static const String webClientId = 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com';
+  static const String webClientId = '798157208423-i3gb1v3kaaond9pp1fmbl33le6o86a5b.apps.googleusercontent.com';
 }

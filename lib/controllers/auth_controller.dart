@@ -3,9 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
 
 class AuthController extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final FirestoreService _firestoreService = FirestoreService();
 
   User? _user;
   bool _isLoading = false;
@@ -31,55 +33,142 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signInWithEmail(String email, String password) async {
+  Future<bool> signInWithEmail(String email, String password) async {
     _setLoading(true);
     _error = null;
+    if (kDebugMode) {
+      // ignore: avoid_print
+      print('[AuthController] signInWithEmail: $email');
+    }
     try {
-      await _authService.signInWithEmailAndPassword(email, password);
+      final user = await _authService.signInWithEmailAndPassword(email, password);
+      if (user != null) {
+        await _ensureUserInFirestore(user);
+        if (kDebugMode) {
+          // ignore: avoid_print
+          print('[AuthController] signInWithEmail OK');
+        }
+        return true;
+      }
+      return false;
     } on FirebaseAuthException catch (e) {
+      if (kDebugMode) {
+        // ignore: avoid_print
+        print('[AuthController] signInWithEmail FirebaseAuthException: ${e.code} - ${e.message}');
+      }
       _error = _authErrorMessage(e.code);
-    } catch (e) {
+      return false;
+    } catch (e, st) {
+      if (kDebugMode) {
+        // ignore: avoid_print
+        print('[AuthController] signInWithEmail error: $e');
+        // ignore: avoid_print
+        print(st);
+      }
       _error = 'Erreur de connexion';
-      if (kDebugMode) {
-        // ignore: avoid_print
-        print(e);
-      }
+      return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  Future<void> signUpWithEmail(String email, String password) async {
+  Future<bool> signUpWithEmail(String email, String password) async {
     _setLoading(true);
     _error = null;
+    if (kDebugMode) {
+      // ignore: avoid_print
+      print('[AuthController] signUpWithEmail: $email');
+    }
     try {
-      await _authService.createUserWithEmailAndPassword(email, password);
+      final user = await _authService.createUserWithEmailAndPassword(
+        email,
+        password,
+      );
+      if (user != null) {
+        await _ensureUserInFirestore(user);
+        if (kDebugMode) {
+          // ignore: avoid_print
+          print('[AuthController] signUpWithEmail OK');
+        }
+        return true;
+      }
+      return false;
     } on FirebaseAuthException catch (e) {
-      _error = _authErrorMessage(e.code);
-    } catch (e) {
-      _error = 'Erreur lors de l\'inscription';
       if (kDebugMode) {
         // ignore: avoid_print
-        print(e);
+        print('[AuthController] signUpWithEmail FirebaseAuthException: ${e.code} - ${e.message}');
       }
+      _error = _authErrorMessage(e.code);
+      return false;
+    } catch (e, st) {
+      if (kDebugMode) {
+        // ignore: avoid_print
+        print('[AuthController] signUpWithEmail error: $e');
+        // ignore: avoid_print
+        print(st);
+      }
+      _error = 'Erreur lors de l\'inscription';
+      return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  Future<void> signInWithGoogle() async {
+  Future<bool> signInWithGoogle() async {
     _setLoading(true);
     _error = null;
+    if (kDebugMode) {
+      // ignore: avoid_print
+      print('[AuthController] signInWithGoogle');
+    }
     try {
-      await _authService.signInWithGoogle();
-    } catch (e) {
-      _error = 'Erreur de connexion avec Google';
+      final user = await _authService.signInWithGoogle();
+      if (user != null) {
+        _user = user;
+        await _ensureUserInFirestore(user);
+        if (kDebugMode) {
+          // ignore: avoid_print
+          print('[AuthController] signInWithGoogle OK: ${user.uid}');
+        }
+        notifyListeners();
+        return true;
+      }
       if (kDebugMode) {
         // ignore: avoid_print
-        print(e);
+        print('[AuthController] signInWithGoogle: user cancelled');
       }
+      return false;
+    } catch (e, st) {
+      if (kDebugMode) {
+        // ignore: avoid_print
+        print('[AuthController] signInWithGoogle error: $e');
+        // ignore: avoid_print
+        print(st);
+      }
+      _error = 'Erreur de connexion avec Google';
+      return false;
     } finally {
       _setLoading(false);
+    }
+  }
+
+  Future<void> _ensureUserInFirestore(User user) async {
+    try {
+      await _firestoreService.saveUser(
+        userId: user.uid,
+        email: user.email ?? '',
+        displayName: user.displayName,
+        photoUrl: user.photoURL,
+      );
+      if (kDebugMode) {
+        // ignore: avoid_print
+        print('[AuthController] User saved to Firestore: ${user.uid}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        // ignore: avoid_print
+        print('[AuthController] Failed to save user to Firestore: $e');
+      }
     }
   }
 

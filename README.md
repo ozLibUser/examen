@@ -78,6 +78,8 @@ Principales dépendances utilisées :
   - L’enregistrement dans la collection `performances`
   - L’affichage de l’historique des mesures sous forme de liste.
 
+  [https://console.cloud.google.com/auth/clients/create?previousPage=%2Fapis%2Fcredentials%3Fauthuser%3D2%26project%3Dexamen-fb32c&authuser=2&project=examen-fb32c]
+
 ### Mise en place de Firebase (à faire avant de lancer l’appli)
 
 1. **Créer un projet Firebase** sur la console Firebase.

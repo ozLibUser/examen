@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +15,7 @@ class SessionsScreen extends StatefulWidget {
 class _SessionsScreenState extends State<SessionsScreen> {
   Timer? _timer;
   int _elapsedSeconds = 0;
-  bool _running = false;
+  bool _isRunning = false;
 
   @override
   void dispose() {
@@ -24,45 +23,52 @@ class _SessionsScreenState extends State<SessionsScreen> {
     super.dispose();
   }
 
-  void _start() {
-    if (_running) return;
-    setState(() {
-      _running = true;
-    });
+  // -----------------------
+  // TIMER LOGIC
+  // -----------------------
+
+  void _startTimer() {
+    if (_isRunning) return;
+
+    setState(() => _isRunning = true);
+
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() {
-        _elapsedSeconds++;
-      });
+      if (!mounted) return;
+      setState(() => _elapsedSeconds++);
     });
   }
 
-  void _pause() {
+  void _pauseTimer() {
     _timer?.cancel();
-    setState(() {
-      _running = false;
-    });
+    setState(() => _isRunning = false);
   }
 
-  void _reset() {
+  void _resetTimer() {
     _timer?.cancel();
     setState(() {
-      _running = false;
+      _isRunning = false;
       _elapsedSeconds = 0;
     });
   }
 
-  String _format(int seconds) {
-    final h = seconds ~/ 3600;
-    final m = (seconds % 3600) ~/ 60;
-    final s = seconds % 60;
-    if (h > 0) {
-      return '${h.toString().padLeft(2, '0')}:'
-          '${m.toString().padLeft(2, '0')}:'
-          '${s.toString().padLeft(2, '0')}';
+  String _formatDuration(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:'
+          '${minutes.toString().padLeft(2, '0')}:'
+          '${secs.toString().padLeft(2, '0')}';
     }
-    return '${m.toString().padLeft(2, '0')}:'
-        '${s.toString().padLeft(2, '0')}';
+
+    return '${minutes.toString().padLeft(2, '0')}:'
+        '${secs.toString().padLeft(2, '0')}';
   }
+
+  // -----------------------
+  // UI
+  // -----------------------
 
   @override
   Widget build(BuildContext context) {
@@ -73,101 +79,113 @@ class _SessionsScreenState extends State<SessionsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Chronomètre',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    _format(_elapsedSeconds),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context)
-                        .textTheme
-                        .displaySmall
-                        ?.copyWith(letterSpacing: 2),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      IconButton.filled(
-                        onPressed: _running ? null : _start,
-                        icon: const Icon(Icons.play_arrow),
-                      ),
-                      IconButton.filled(
-                        onPressed: _running ? _pause : null,
-                        icon: const Icon(Icons.pause),
-                      ),
-                      IconButton.outlined(
-                        onPressed: _reset,
-                        icon: const Icon(Icons.stop),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: _elapsedSeconds == 0
-                        ? null
-                        : () => _saveCurrentSession(context),
-                    icon: const Icon(Icons.save),
-                    label: const Text('Enregistrer la séance'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Historique des séances',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
+          _buildTimerCard(context),
+          const SizedBox(height: 24),
+          _buildHistoryTitle(context),
+          const SizedBox(height: 12),
           if (sessions.isEmpty)
-            const Text(
-              'Aucune séance enregistrée pour le moment.',
-            )
+            const Text('Aucune séance enregistrée pour le moment.')
           else
-            ...sessions.map(
-              (s) => Card(
-                child: ListTile(
-                  leading: const Icon(Icons.check_circle_outline),
-                  title: Text(
-                    '${s.date.day.toString().padLeft(2, '0')}/'
-                    '${s.date.month.toString().padLeft(2, '0')} '
-                    '${s.date.hour.toString().padLeft(2, '0')}:'
-                    '${s.date.minute.toString().padLeft(2, '0')}',
-                  ),
-                  subtitle: Text(
-                    'Durée: ${_format(s.durationSeconds)}'
-                    '${s.notes.isNotEmpty ? '\nNotes: ${s.notes}' : ''}',
-                  ),
-                ),
-              ),
-            ),
+            ...sessions.map(_buildSessionCard),
         ],
       ),
     );
   }
 
-  Future<void> _saveCurrentSession(BuildContext context) async {
+  Widget _buildTimerCard(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Chronomètre',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              _formatDuration(_elapsedSeconds),
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .displayMedium
+                  ?.copyWith(letterSpacing: 3),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                IconButton.filled(
+                  onPressed: _isRunning ? null : _startTimer,
+                  icon: const Icon(Icons.play_arrow),
+                ),
+                IconButton.filled(
+                  onPressed: _isRunning ? _pauseTimer : null,
+                  icon: const Icon(Icons.pause),
+                ),
+                IconButton.outlined(
+                  onPressed: _resetTimer,
+                  icon: const Icon(Icons.stop),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed:
+                  _elapsedSeconds == 0 ? null : () => _saveSession(context),
+              icon: const Icon(Icons.save),
+              label: const Text('Enregistrer la séance'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHistoryTitle(BuildContext context) {
+    return Text(
+      'Historique des séances',
+      style: Theme.of(context)
+          .textTheme
+          .titleLarge
+          ?.copyWith(fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildSessionCard(TrainingSession session) {
+    final formattedDate =
+        '${session.date.day.toString().padLeft(2, '0')}/'
+        '${session.date.month.toString().padLeft(2, '0')} '
+        '${session.date.hour.toString().padLeft(2, '0')}:'
+        '${session.date.minute.toString().padLeft(2, '0')}';
+
+    return Card(
+      child: ListTile(
+        leading: const Icon(Icons.check_circle_outline),
+        title: Text(formattedDate),
+        subtitle: Text(
+          'Durée : ${_formatDuration(session.durationSeconds)}'
+          '${session.notes.isNotEmpty ? '\nNotes : ${session.notes}' : ''}',
+        ),
+      ),
+    );
+  }
+
+  // -----------------------
+  // SAVE SESSION
+  // -----------------------
+
+  Future<void> _saveSession(BuildContext context) async {
     final notesController = TextEditingController();
     final controller = context.read<TrainingController>();
 
-    await showDialog<void>(
+    await showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Valider la séance'),
           content: TextField(
@@ -180,7 +198,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Annuler'),
             ),
             ElevatedButton(
@@ -192,11 +210,28 @@ class _SessionsScreenState extends State<SessionsScreen> {
                   durationSeconds: _elapsedSeconds,
                   notes: notesController.text.trim(),
                 );
-                await controller.saveSession(session);
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
-                _reset();
+
+                final ok = await controller.saveSession(session);
+
+                if (!mounted) return;
+
+                Navigator.of(dialogContext).pop();
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      ok
+                          ? 'Séance enregistrée'
+                          : controller.error ?? 'Erreur',
+                    ),
+                    backgroundColor: ok
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Theme.of(context).colorScheme.error,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+
+                if (ok) _resetTimer();
               },
               child: const Text('Enregistrer'),
             ),
@@ -204,6 +239,7 @@ class _SessionsScreenState extends State<SessionsScreen> {
         );
       },
     );
+
+    notesController.dispose();
   }
 }
-

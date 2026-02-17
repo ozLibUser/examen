@@ -7,6 +7,32 @@ import '../models/training_session.dart';
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  CollectionReference<Map<String, dynamic>> _usersRef() =>
+      _db.collection('users');
+
+  /// Crée ou met à jour le profil utilisateur dans Firestore.
+  Future<void> saveUser({
+    required String userId,
+    required String email,
+    String? displayName,
+    String? photoUrl,
+  }) async {
+    final userData = <String, dynamic>{
+      'email': email,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    if (displayName != null) userData['displayName'] = displayName;
+    if (photoUrl != null) userData['photoUrl'] = photoUrl;
+
+    final doc = _usersRef().doc(userId);
+    final exists = (await doc.get()).exists;
+    if (!exists) {
+      userData['createdAt'] = FieldValue.serverTimestamp();
+    }
+
+    await doc.set(userData, SetOptions(merge: true));
+  }
+
   CollectionReference<Map<String, dynamic>> _programsRef() =>
       _db.collection('programs');
 
@@ -33,6 +59,10 @@ class FirestoreService {
 
   Future<void> deleteProgram(String id) async {
     await _programsRef().doc(id).delete();
+  }
+
+  Future<void> deletePerformance(String id) async {
+    await _performancesRef().doc(id).delete();
   }
 
   Stream<List<TrainingProgram>> watchPrograms(String userId) {

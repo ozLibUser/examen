@@ -11,19 +11,24 @@ class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
       return const FirebaseOptions(
-        apiKey: 'WEB_API_KEY',
-        appId: 'WEB_APP_ID',
-        messagingSenderId: 'WEB_MESSAGING_SENDER_ID',
-        projectId: 'WEB_PROJECT_ID',
+        apiKey: 'AIzaSyB1S5zw95PY1BDGk11qya-luDdqEph4xPk',
+        authDomain: 'examen-fb32c.firebaseapp.com',
+        projectId: 'examen-fb32c',
+        storageBucket: 'examen-fb32c.firebasestorage.app',
+        messagingSenderId: '798157208423',
+        appId: '1:798157208423:web:29a73aaaac1f4f4a548dc2',
+        measurementId: 'G-8HFNGE4X29',
       );
     }
 
-    // Android par défaut (mobile)
+    // Android (mêmes valeurs web par défaut)
     return const FirebaseOptions(
-      apiKey: 'ANDROID_API_KEY',
-      appId: 'ANDROID_APP_ID',
-      messagingSenderId: 'ANDROID_MESSAGING_SENDER_ID',
-      projectId: 'ANDROID_PROJECT_ID',
+      apiKey: 'AIzaSyB1S5zw95PY1BDGk11qya-luDdqEph4xPk',
+      authDomain: 'examen-fb32c.firebaseapp.com',
+      projectId: 'examen-fb32c',
+      storageBucket: 'examen-fb32c.firebasestorage.app',
+      messagingSenderId: '798157208423',
+      appId: '1:798157208423:web:29a73aaaac1f4f4a548dc2',
     );
   }
 }
