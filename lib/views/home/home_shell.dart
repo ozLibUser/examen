@@ -1,4 +1,4 @@
-// home_shell.dart - Navigation principale
+import 'package:examen/views/home/quotes_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -49,6 +49,19 @@ class _HomeShellState extends State<HomeShell> {
         elevation: 0,
         iconTheme: const IconThemeData(color: Color(0xFF1E293B)),
         actions: [
+          // NOUVEAU BOUTON API
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const QuoteScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.psychology),
+            tooltip: 'Motivation du jour',
+          ),
           IconButton(
             onPressed: auth.signOut,
             icon: const Icon(Icons.logout),
