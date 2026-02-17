@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../services/auth_service.dart';
 
@@ -18,7 +19,10 @@ class AuthController extends ChangeNotifier {
     _user = _authService.currentUser;
     _authService.authStateChanges.listen((user) {
       _user = user;
-      notifyListeners();
+      // Évite "setState during build" : notifier après le frame en cours
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
     });
   }
 
