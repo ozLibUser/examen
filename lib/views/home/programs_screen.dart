@@ -263,7 +263,7 @@ class _ProgramEditorSheetState extends State<ProgramEditorSheet> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _level,
+            initialValue: _level,
             items: const [
               DropdownMenuItem(value: 'Débutant', child: Text('Débutant')),
               DropdownMenuItem(value: 'Intermédiaire', child: Text('Intermédiaire')),

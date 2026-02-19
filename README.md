@@ -101,6 +101,3 @@ Principales dépendances utilisées :
 flutter pub get
 flutter run
 ```
-
-Assurez-vous d’avoir configuré Firebase avant d’exécuter l’application, sinon la connexion et Firestore ne fonctionneront pas correctement.
-
